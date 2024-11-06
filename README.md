@@ -1,1 +1,1 @@
-# OA-Analysis-of-ERIC-Indexed-Journals
+# OA Analysis of ERIC Indexed Journals
