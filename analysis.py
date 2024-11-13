@@ -6,13 +6,16 @@ import math
 
 file = 'FULL_DATA_SET.xlsx'
 df = pd.read_excel(file)
+print(df.columns)
 
 # 1. General description of ERIC indexed journals:
 # 1.1 Countries
 # print(f'OpenAlex Total: {df['openalex_country'].count()} || JISC Total:{df['SR_country'].count()}')
 # df['combined_country'] = df['openalex_country'].fillna(df['SR_country'])
 # df['combined_country'] = df['combined_country'].str.lower()
+# print(df['combined_country'].count())
 # print(df['combined_country'].value_counts())
+# print(df['combined_country'].value_counts(normalize=True) * 100)
 
 # 1.2 Number of journals per ERIC collection area 
 # print(df['ERIC Topic Area'].value_counts())
@@ -84,8 +87,9 @@ df = pd.read_excel(file)
 # top_20_journals = df.nlargest(20, 'openalex_h_index')
 # print(top_20_journals['Journal Name'])
 # print(df['openalex_h_index'].describe())
+# print(df['openalex_h_index'].describe())
 
-# print('2yr Impact Factor')
+# # print('2yr Impact Factor')
 # top_20_journals = df.nlargest(20, 'openalex_impact_factor')
 # print(top_20_journals['Journal Name'])
 # print(df['openalex_impact_factor'].describe())
@@ -95,37 +99,63 @@ df = pd.read_excel(file)
 # df['combined_apc'] = df['OPENAPC_Avg_APC_USD'].fillna(df['openalex_apc_usd'])
 # df['combined_apc'] = df['combined_apc'].fillna(df['doaj_apc_usd'])
 
-# Include only rows that have APC and H-Index
+# # Include only rows that have APC and H-Index
 # df['h_index_per_apc'] = df['openalex_h_index'].where(df['combined_apc'].notnull())
 # df_filtered_h_index = df[df['h_index_per_apc'].notnull()]
 
-# Calculate correlation
-# correlation = df_filtered['combined_apc'].corr(df_filtered['h_index_per_apc'])
+# # Calculate correlation
+# correlation = df_filtered_h_index['combined_apc'].corr(df_filtered_h_index['h_index_per_apc'])
 # print("Correlation coefficient:", correlation)
 
-# Regression Analysis
-# X = df_filtered['h_index_per_apc']
-# y = df_filtered[['combined_apc']]
+# # Regression Analysis
+# X = df_filtered_h_index['h_index_per_apc']
+# y = df_filtered_h_index[['combined_apc']]
 # model = sm.OLS(y, X).fit()
 # print(model.summary())
 
 # df['impact_factor_per_apc'] = df['openalex_impact_factor'].where(df['combined_apc'].notnull())
 # df_filtered_impact_factor = df[df['impact_factor_per_apc'].notnull()]
 
-# Calculate correlation
+# # Calculate correlation
 # correlation = df_filtered_impact_factor['combined_apc'].corr(df_filtered_impact_factor['impact_factor_per_apc'])
 # print("Correlation coefficient:", correlation)
 
-# Regression Analysis
+# # Regression Analysis
 # X = df_filtered_impact_factor['impact_factor_per_apc']
 # y = df_filtered_impact_factor['combined_apc']
 # model = sm.OLS(y, X).fit()
 # print(model.summary())
 
 
-# 2. Access for Readers 
+# # 2. Access for Readers 
 # print(df[['EZB_price_for_reading_access', 'EZB_access_conditions']])
+# print(df['EZB_price_for_reading_access'].count())
+# print(df['EZB_price_for_reading_access'].value_counts())
 # print(df['EZB_price_for_reading_access'].value_counts(normalize=True) * 100)
+# print('---'*10)
+# print(df['openalex_is_oa'].count())
+# print(df['openalex_is_oa'].value_counts())
+# print(df['openalex_is_oa'].value_counts(normalize=True) * 100)
+
+# df['combined_OA'] = df['openalex_is_oa'].fillna(df['EZB_price_for_reading_access'])
+# print(df['combined_OA'].count())
+
+# def is_oa(data):
+#     options = [1.0, "{'subject to fee', 'free of charge'}", "{'free of charge'}" ]
+#     not_options = [0.0, "{'subject to fee'}"]
+#     if data in options:
+#         return 'oa'
+#     elif data in not_options:
+#         return 'no'
+#     else: 
+#         return None
+
+# df['combined_OA_results'] = df['combined_OA'].apply(is_oa)
+# print(df['combined_OA_results'].count())
+# print(df['combined_OA_results'].value_counts())
+# print(df['combined_OA_results'].value_counts(normalize=True) * 100)
+
+# =1 {'subject to fee', 'free of charge'}{'free of charge'}
 
 # 3. Is it Diamond Open Access? 
 # def determine_if_published_ver_oa_fee(data):
