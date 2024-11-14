@@ -37,8 +37,15 @@ df['composite_OA_results'] = df['composite_OA'].apply(is_oa)
 # print(df['composite_OA_results'].value_counts())
 # print(df['composite_OA_results'].value_counts(normalize=True) * 100)
 
+# 3. Countries
+# print(f'OpenAlex Total: {df['openalex_country'].count()} || JISC Total:{df['SR_country'].count()}')
+df['composite_country'] = df['openalex_country'].fillna(df['SR_country'])
+df['composite_country'] = df['composite_country'].str.lower()
+# print(df['composite_country'].count())
+# print(df['composite_country'].value_counts())
+# print(df['composite_country'].value_counts(normalize=True) * 100)
 
-# 3 Impact Factors
+# 4 Impact Factors
 # print(df['openalex_h_index'].describe())
 # print(df['openalex_impact_factor'].describe())
 
@@ -99,13 +106,13 @@ df['composite_publishers'] = df['composite_publishers'].fillna(df['EZB_publisher
 
 
 # 6. Types of Publishers
-grouped_df = df.groupby(['SR_publisher_type', 'Journal Name'])['composite_apc'].max().reset_index()
-sorted_df = grouped_df.sort_values(['SR_publisher_type', 'composite_apc'], ascending=[True, False])
+# grouped_df = df.groupby(['SR_publisher_type', 'Journal Name'])['composite_apc'].max().reset_index()
+# sorted_df = grouped_df.sort_values(['SR_publisher_type', 'composite_apc'], ascending=[True, False])
 
 
-print(df['SR_publisher_type'].count())
-publisher_types = ['Commercial Publisher', 'University Publisher', 'Society Publisher']
-for publisher_type in publisher_types:
+# print(df['SR_publisher_type'].count())
+# publisher_types = ['Commercial Publisher', 'University Publisher', 'Society Publisher']
+# for publisher_type in publisher_types:
     # filtered_df = df[df['SR_publisher_type'] == publisher_type]
     # publisher_column = filtered_df['composite_publishers']
     # publishers_per_type = filtered_df['composite_publishers'].nunique()
@@ -115,10 +122,10 @@ for publisher_type in publisher_types:
     # print(f"Publishers for {publisher_type}:")
     # print(publisher_column.value_counts())
 
-    top_journal = sorted_df[sorted_df['SR_publisher_type'] == publisher_type].iloc[0]
-    print(f"Highest APC for {publisher_type}:")
-    print(f"Journal Name: {top_journal['Journal Name']}")
-    print(f"Composite APC: {top_journal['composite_apc']}")
+    # top_journal = sorted_df[sorted_df['SR_publisher_type'] == publisher_type].iloc[0]
+    # print(f"Highest APC for {publisher_type}:")
+    # print(f"Journal Name: {top_journal['Journal Name']}")
+    # print(f"Composite APC: {top_journal['composite_apc']}")
 
 
 # # 7. Regression: APC and Impact Factor
@@ -150,4 +157,58 @@ for publisher_type in publisher_types:
 # model = sm.OLS(y, X).fit()
 # print(model.summary())
 
+# 8. Publisher-based OA publishing schemes
+
+# def unpack_oa_schemes(data):
+#     if not data:
+#         return None
+
+#     data = str(data).strip()
+#     data = data.replace('[', '').replace(']', '').replace("'", "")
+
+#     policies_list = []
+#     if ',' in data:
+#         policies = data.split(',')
+#         for policy in policies:
+#             policies_list.append(policy.strip())
+#         return policies_list
+#     else:
+#         return data
+
+# df['oa_schemes'] = df['SR_oa_schemes'].apply(unpack_oa_schemes)
+# df_expanded = df['oa_schemes'].explode()
+# df_expanded = df_expanded.dropna()
+
+# print(df['SR_oa_schemes'].count())
+# print(df_expanded.value_counts().head(30))
+
+# 9. Is it Diamond Open Access? 
+def determine_if_published_ver_oa_fee(data):
+    if not data:
+        return None
+
+    data = str(data).strip()
+    data = data.replace('[', '').replace(']', '').replace("'", "")
+
+    if ',' in data:
+        answers = data.split(',')
+        return 'no' if 'no' in answers else 'yes'
+
+    return data
+
+def determine_if_diamond_oa(row):
+    if row['composite_OA_results'] == 'oa' and row['published_version_oa_fee'] == 'no' and (math.isnan(row['composite_apc']) or row['composite_apc'] is None):
+        return True
+    else:
+        return False
+
+df['published_version_oa_fee'] = df['SR_published_version_oa_fees'].apply(determine_if_published_ver_oa_fee)
+df['diamond_oa_status'] = df.apply(determine_if_diamond_oa, axis=1)
+
+# print(df['composite_OA_results'].value_counts())
+# print(df['diamond_oa_status'].value_counts())
+
+diamond_oa_journals_details = df[df['diamond_oa_status'] == True]['composite_country']
+print(diamond_oa_journals_details.value_counts())
+print(diamond_oa_journals_details.value_counts(normalize=True)*100)
 
