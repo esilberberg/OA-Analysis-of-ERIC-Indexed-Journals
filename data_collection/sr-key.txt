@@ -1,1 +1,2 @@
-SherpaRomero API Key
+Jisc Open Policy Finder API Key
+https://openpolicyfinder.jisc.ac.uk/help/developers/use-our-api

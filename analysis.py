@@ -1,25 +1,12 @@
 import pandas as pd
-import re
 import statsmodels.api as sm
 import math
-
 
 file = 'FULL_DATA_SET.xlsx'
 df = pd.read_excel(file)
 
-# # 1 Number of journals per ERIC collection area 
-# print(df['ERIC Topic Area'].value_counts())
-
-
-# # 2. Subscription vs. OA
-# print(df['EZB_price_for_reading_access'].count())
-# print(df['EZB_price_for_reading_access'].value_counts())
-# print(df['EZB_price_for_reading_access'].value_counts(normalize=True) * 100)
-# print('---'*10)
-# print(df['openalex_is_oa'].count())
-# print(df['openalex_is_oa'].value_counts())
-# print(df['openalex_is_oa'].value_counts(normalize=True) * 100)
-
+# 1. Composite Data
+# 1.1 Subscription and Open Access
 df['composite_OA'] = df['openalex_is_oa'].fillna(df['EZB_price_for_reading_access'])
 
 def is_oa(data):
@@ -33,156 +20,20 @@ def is_oa(data):
         return None
 
 df['composite_OA_results'] = df['composite_OA'].apply(is_oa)
-# print(df['composite_OA_results'].count())
-# print(df['composite_OA_results'].value_counts())
-# print(df['composite_OA_results'].value_counts(normalize=True) * 100)
 
-# 3. Countries
-# print(f'OpenAlex Total: {df['openalex_country'].count()} || JISC Total:{df['SR_country'].count()}')
+# 1.2 Countries
 df['composite_country'] = df['openalex_country'].fillna(df['SR_country'])
 df['composite_country'] = df['composite_country'].str.lower()
-# print(df['composite_country'].count())
-# print(df['composite_country'].value_counts())
-# print(df['composite_country'].value_counts(normalize=True) * 100)
 
-# 4 Impact Factors
-# print(df['openalex_h_index'].describe())
-# print(df['openalex_impact_factor'].describe())
-
-# print('Highest H-Index for OA')
-# filter_df = df[df['composite_OA_results'] == 'oa']
-# h_index_idx = filter_df['openalex_h_index'].idxmax()
-# oa_highest_hindex = filter_df.loc[h_index_idx, ['Journal Name', 'issn_l', 'openalex_h_index']]
-# print(oa_highest_hindex)
-
-# print('Highest 2yr Impact Factor for OA')
-# filter_df = df[df['composite_OA_results'] == 'oa']
-# two_yr_idx = filter_df['openalex_impact_factor'].idxmax()
-# oa_highest_two_yr = filter_df.loc[two_yr_idx, ['Journal Name', 'issn_l', 'openalex_impact_factor']]
-# print(oa_highest_two_yr)
-
-# print('Highest H-Index for Subscription')
-# filter_df = df[df['composite_OA_results'] == 'no']
-# h_index_idx = filter_df['openalex_h_index'].idxmax()
-# subscription_highest_hindex = filter_df.loc[h_index_idx, ['Journal Name', 'issn_l', 'openalex_h_index']]
-# print(subscription_highest_hindex)
-
-# print('Highest 2yr Impact Factor for Subscription')
-# filter_df = df[df['composite_OA_results'] == 'no']
-# two_yr_idx = filter_df['openalex_impact_factor'].idxmax()
-# subscription_highest_two_yr = filter_df.loc[two_yr_idx, ['Journal Name', 'issn_l', 'openalex_impact_factor']]
-# print(subscription_highest_two_yr)
-
-
-# 4. APCs
-# print('OpenAPC')
-# print(df['OPENAPC_Avg_APC_USD'].dropna().describe())
-# print('----'*5)
-# print('OpenAlex')
-# print(df['openalex_apc_usd'].dropna().describe())
-# print('----'*5)
-# print('DOAJ')
-# print(df['doaj_apc_usd'].dropna().describe())
-
+# 1.3 APC Fees
 df['composite_apc'] = df['OPENAPC_Avg_APC_USD'].fillna(df['openalex_apc_usd'])
 df['composite_apc'] = df['composite_apc'].fillna(df['doaj_apc_usd'])
-# print(df['composite_apc'].describe())
-# apc_idx = df['composite_apc'].idxmax()
-# highest_apc = df.loc[apc_idx, ['Journal Name', 'issn_l', 'composite_apc']]
-# print(highest_apc)
 
-
-# 5. Publishers
+# 1.4 Publisher
 df['composite_publishers'] = df['openalex_publisher'].fillna(df['SR_publisher'])
 df['composite_publishers'] = df['composite_publishers'].fillna(df['EZB_publishers'])
-# print(df['composite_publishers'].value_counts())
-# print(df['composite_publishers'].count())
 
-# threshold = df['composite_apc'].quantile(0.75)
-# df_filtered = df[df['composite_apc'] >= threshold]
-# high_apc_publishers = df_filtered['composite_publishers']
-# print(high_apc_publishers.value_counts())
-# print(high_apc_publishers.count())
-
-
-# 6. Types of Publishers
-# grouped_df = df.groupby(['SR_publisher_type', 'Journal Name'])['composite_apc'].max().reset_index()
-# sorted_df = grouped_df.sort_values(['SR_publisher_type', 'composite_apc'], ascending=[True, False])
-
-
-# print(df['SR_publisher_type'].count())
-# publisher_types = ['Commercial Publisher', 'University Publisher', 'Society Publisher']
-# for publisher_type in publisher_types:
-    # filtered_df = df[df['SR_publisher_type'] == publisher_type]
-    # publisher_column = filtered_df['composite_publishers']
-    # publishers_per_type = filtered_df['composite_publishers'].nunique()
-    # print(f"Total publishers for {publisher_type}: {publishers_per_type}")
-    # journals_per_type = filtered_df['Journal Name'].nunique()
-    # print(f"Total journals for {publisher_type}: {journals_per_type}")
-    # print(f"Publishers for {publisher_type}:")
-    # print(publisher_column.value_counts())
-
-    # top_journal = sorted_df[sorted_df['SR_publisher_type'] == publisher_type].iloc[0]
-    # print(f"Highest APC for {publisher_type}:")
-    # print(f"Journal Name: {top_journal['Journal Name']}")
-    # print(f"Composite APC: {top_journal['composite_apc']}")
-
-
-# # 7. Regression: APC and Impact Factor
-# # Include only rows that have APC and H-Index
-# df['h_index_per_apc'] = df['openalex_h_index'].where(df['composite_apc'].notnull())
-# df_filtered_h_index = df[df['h_index_per_apc'].notnull()]
-
-# # Calculate correlation
-# correlation = df_filtered_h_index['composite_apc'].corr(df_filtered_h_index['h_index_per_apc'])
-# print("Correlation coefficient:", correlation)
-
-# # Regression Analysis
-# X = df_filtered_h_index['h_index_per_apc']
-# y = df_filtered_h_index[['composite_apc']]
-# model = sm.OLS(y, X).fit()
-# print(model.summary())
-
-# # Include only rows that have APC and 2-year impact factor
-# df['impact_factor_per_apc'] = df['openalex_impact_factor'].where(df['composite_apc'].notnull())
-# df_filtered_impact_factor = df[df['impact_factor_per_apc'].notnull()]
-
-# # Calculate correlation
-# correlation = df_filtered_impact_factor['composite_apc'].corr(df_filtered_impact_factor['impact_factor_per_apc'])
-# print("Correlation coefficient:", correlation)
-
-# # Regression Analysis
-# X = df_filtered_impact_factor['impact_factor_per_apc']
-# y = df_filtered_impact_factor['composite_apc']
-# model = sm.OLS(y, X).fit()
-# print(model.summary())
-
-# 8. Publisher-based OA publishing schemes
-
-# def unpack_oa_schemes(data):
-#     if not data:
-#         return None
-
-#     data = str(data).strip()
-#     data = data.replace('[', '').replace(']', '').replace("'", "")
-
-#     policies_list = []
-#     if ',' in data:
-#         policies = data.split(',')
-#         for policy in policies:
-#             policies_list.append(policy.strip())
-#         return policies_list
-#     else:
-#         return data
-
-# df['oa_schemes'] = df['SR_oa_schemes'].apply(unpack_oa_schemes)
-# df_expanded = df['oa_schemes'].explode()
-# df_expanded = df_expanded.dropna()
-
-# print(df['SR_oa_schemes'].count())
-# print(df_expanded.value_counts().head(30))
-
-# 9. Is it Diamond Open Access? 
+# 1.5 Diamond Open Access
 def determine_if_published_ver_oa_fee(data):
     if not data:
         return None
@@ -205,10 +56,125 @@ def determine_if_diamond_oa(row):
 df['published_version_oa_fee'] = df['SR_published_version_oa_fees'].apply(determine_if_published_ver_oa_fee)
 df['diamond_oa_status'] = df.apply(determine_if_diamond_oa, axis=1)
 
-# print(df['composite_OA_results'].value_counts())
-# print(df['diamond_oa_status'].value_counts())
+# 2. Number of journals per ERIC collection area 
+journals_per_collection_area = df['ERIC Topic Area'].value_counts()
 
-diamond_oa_journals_details = df[df['diamond_oa_status'] == True]['composite_country']
-print(diamond_oa_journals_details.value_counts())
-print(diamond_oa_journals_details.value_counts(normalize=True)*100)
+# 3. Publishing Models
+# 3.1 Open Access
+open_alex_oa_count = df['openalex_is_oa'].value_counts()
+open_alex_oa_percent = df['openalex_is_oa'].value_counts()
+ezb_oa_count = df['EZB_price_for_reading_access'].value_counts()
+ezb_oa_percent = df['EZB_price_for_reading_access'].value_counts(normalize=True) * 100
 
+composite_oa_count = df['composite_OA_results'].value_counts()
+composite_oa_percent = df['composite_OA_results'].value_counts(normalize=True) * 100
+composite_oa_df = df[df['composite_OA_results'] == 'oa']
+
+# 3.2 Subscription
+subscription_journals_df = df[df['composite_OA_results'] == 'no']
+
+# 3.3 Diamond OA
+diamond_journals_df = df[df['diamond_oa_status'] == True]
+
+# 4. Countries
+countries_count = df['composite_country'].value_counts()
+countries_percent = df['composite_country'].value_counts(normalize=True) * 100
+
+# 5 Impact Factors
+# 5.1 Total Impact Factors
+total_h_index = df['openalex_h_index'].describe()
+total_2_yr_impact = df['openalex_impact_factor'].describe()
+
+# 5.2 Subscription Impact Factors
+subscription_h_index = subscription_journals_df['openalex_h_index'].describe()
+subscription_2yr_impact = subscription_journals_df['openalex_impact_factor'].describe()
+
+# 5.3 OA Impact Factors
+oa_h_index = composite_oa_df['openalex_h_index'].describe()
+oa_2yr_impact = composite_oa_df['openalex_impact_factor'].describe()
+
+# 5.4 Diamond Impact Factors
+diamon_h_index = diamond_journals_df['openalex_h_index'].describe()
+diamond_2_yr_impact = diamond_journals_df['openalex_impact_factor'].describe()
+
+# 6. APC Fees
+composite_apc_describe = df['composite_apc'].describe()
+
+apc_idx = df['composite_apc'].idxmax()
+highest_apc = df.loc[apc_idx, ['Journal Name', 'issn_l', 'composite_apc']]
+
+# 7. Publishers
+# 7.1 Publisher Count
+publishers_count = df['composite_publishers'].value_counts()
+
+# 7.2 Highest APC Publishers
+threshold = df['composite_apc'].quantile(0.75)
+top_25_percent_apc_df = df[df['composite_apc'] >= threshold]
+high_apc_publishers = top_25_percent_apc_df['composite_publishers']
+high_apc_publishers_count = high_apc_publishers.value_counts()
+
+# 7.3 Types of Publishers
+grouped_df = df.groupby(['SR_publisher_type', 'Journal Name'])['composite_apc'].max().reset_index()
+sorted_df = grouped_df.sort_values(['SR_publisher_type', 'composite_apc'], ascending=[True, False])
+
+publisher_types = ['Commercial Publisher', 'University Publisher', 'Society Publisher']
+for publisher_type in publisher_types:
+    selected_publisher_type_df = df[df['SR_publisher_type'] == publisher_type]
+    publisher_column = selected_publisher_type_df['composite_publishers']
+    publishers_per_type = selected_publisher_type_df['composite_publishers'].nunique()
+    journals_per_type = selected_publisher_type_df['Journal Name'].nunique()
+
+
+# 7.4 Publisher-based OA publishing schemes
+
+def unpack_oa_schemes(data):
+    if not data:
+        return None
+
+    data = str(data).strip()
+    data = data.replace('[', '').replace(']', '').replace("'", "")
+
+    policies_list = []
+    if ',' in data:
+        policies = data.split(',')
+        for policy in policies:
+            policies_list.append(policy.strip())
+        return policies_list
+    else:
+        return data
+
+df['oa_schemes'] = df['SR_oa_schemes'].apply(unpack_oa_schemes)
+df_expanded = df['oa_schemes'].explode()
+df_expanded = df_expanded.dropna()
+
+print(df_expanded.value_counts(normalize=True) * 100)
+
+
+# 8. Regression: APC and Impact Factor
+# 8.1 APC & H-Index
+# Include only rows that have APC and H-Index
+df['h_index_per_apc'] = df['openalex_h_index'].where(df['composite_apc'].notnull())
+df_filtered_h_index = df[df['h_index_per_apc'].notnull()]
+
+# Calculate correlation
+correlation = df_filtered_h_index['composite_apc'].corr(df_filtered_h_index['h_index_per_apc'])
+
+# Regression Analysis
+X = df_filtered_h_index['h_index_per_apc']
+y = df_filtered_h_index[['composite_apc']]
+model = sm.OLS(y, X).fit()
+analysis_summary_h_index = model.summary()
+
+# 8.2 APC & 2-Year Impact Factor
+# Include only rows that have APC and 2-year impact factor
+df['impact_factor_per_apc'] = df['openalex_impact_factor'].where(df['composite_apc'].notnull())
+df_filtered_impact_factor = df[df['impact_factor_per_apc'].notnull()]
+
+# Calculate correlation
+correlation = df_filtered_impact_factor['composite_apc'].corr(df_filtered_impact_factor['impact_factor_per_apc'])
+
+# Regression Analysis
+X = df_filtered_impact_factor['impact_factor_per_apc']
+y = df_filtered_impact_factor['composite_apc']
+model = sm.OLS(y, X).fit()
+analysis_summary_2yr_impact = model.summary()
