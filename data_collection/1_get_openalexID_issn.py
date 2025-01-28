@@ -23,7 +23,7 @@ def get_openalexID_issn(journal_name):
     return openalex_id, issn_l
 
 
-file = 'ERIC Indexed Journals Dataset.xlsx'
+file = 'ERIC-journals-list.xlsx'
 df = pd.read_excel(file)
 
 df['openalex_id'], df['issn_l'] = zip(*df['Journal Name'].apply(get_openalexID_issn))

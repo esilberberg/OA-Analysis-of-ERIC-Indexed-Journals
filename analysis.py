@@ -2,7 +2,7 @@ import pandas as pd
 import statsmodels.api as sm
 import math
 
-file = 'FULL_DATA_SET.xlsx'
+file = 'dataset-full.xlsx'
 df = pd.read_excel(file)
 
 # 1. Composite Data
