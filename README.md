@@ -1,5 +1,5 @@
 # OA Analysis of ERIC Indexed Journals
-This study identifies the characteristics and publishing models of ERIC-indexed journals with special attention given to determining the adoption rate of the Diamond Open Access model.
+This study (under review for publication) identifies the characteristics and publishing models of ERIC-indexed journals with special attention given to determining the adoption rate of the Diamond Open Access model.
 
 ## Process
 1. The 1,244 journals were copied from [ERIC Journal and NonJournal Sources by Topic Area](https://eric.ed.gov/?journaltopics) into ``ERIC-journals-list.xlsx``.
